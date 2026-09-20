@@ -1,18 +1,17 @@
 import { useState, useEffect, useCallback } from 'react';
-import { GallerySettings, PhotoItem } from './types';
+import { GallerySettings, MediaItem } from './types';
 import { LoginScreen } from './components/LoginScreen';
 import { Gallery } from './components/Gallery';
 import { revokeAllObjectUrls } from './utils/imageUtils';
 import {
-  loadAllPermanentPhotos,
-  addPhotosToSecureVault,
-  removePhoto,
+  loadAllPermanentMedia,
+  addMediaToSecureVault,
+  removeMedia,
 } from './utils/folderLoader';
 
 const DEFAULT_SETTINGS: GallerySettings = {
   theme: 'dark',
   density: 'comfortable',
-  includeSubfolders: true,
   defaultSort: 'name-asc',
   inactivityTimeoutMinutes: 15,
   showMetadataOverlay: false,
@@ -26,9 +25,9 @@ export default function App() {
     return sessionStorage.getItem('zish_gallery_authenticated') === 'true';
   });
 
-  // Photos state from permanent folder & secure vault
-  const [photos, setPhotos] = useState<PhotoItem[]>([]);
-  const [isLoadingPhotos, setIsLoadingPhotos] = useState<boolean>(false);
+  // Media state from permanent folder & secure vault
+  const [photos, setPhotos] = useState<MediaItem[]>([]);
+  const [, setIsLoadingPhotos] = useState<boolean>(false);
 
   // Settings state
   const [settings, setSettings] = useState<GallerySettings>(() => {
@@ -50,14 +49,14 @@ export default function App() {
     }
   }, []);
 
-  // Fetch photos from the permanent folder and permanent vault
+  // Fetch media from the permanent folder and permanent vault
   const refreshPhotos = useCallback(async () => {
     setIsLoadingPhotos(true);
     try {
-      const loaded = await loadAllPermanentPhotos();
+      const loaded = await loadAllPermanentMedia();
       setPhotos(loaded);
     } catch (err) {
-      console.warn('Error loading permanent photos:', err);
+      console.warn('Error loading permanent media:', err);
     } finally {
       setIsLoadingPhotos(false);
     }
@@ -79,15 +78,15 @@ export default function App() {
     });
   };
 
-  // Add photos permanently to vault
+  // Add media (images & videos) permanently to vault
   const handleAddPhotos = async (files: File[]) => {
-    const newItems = await addPhotosToSecureVault(files);
+    const newItems = await addMediaToSecureVault(files);
     setPhotos((prev) => [...prev, ...newItems]);
   };
 
-  // Remove photo from vault
+  // Remove media from vault
   const handleDeletePhoto = async (photoId: string) => {
-    await removePhoto(photoId);
+    await removeMedia(photoId);
     setPhotos((prev) => prev.filter((p) => p.id !== photoId));
   };
 
@@ -104,7 +103,7 @@ export default function App() {
     return <LoginScreen onUnlock={() => setIsAuthenticated(true)} />;
   }
 
-  // 2. Permanent Private Photo Gallery (No folder selection barrier)
+  // 2. Permanent Private Media Vault (No compartments, videos + photos supported)
   return (
     <Gallery
       photos={photos}

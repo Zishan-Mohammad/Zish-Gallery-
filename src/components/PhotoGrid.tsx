@@ -1,15 +1,15 @@
-import React, { useState } from 'react';
-import { Heart, Maximize2, ImageOff, Folder } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { Heart, Maximize2, ImageOff, Video, Play } from 'lucide-react';
 import { motion } from 'motion/react';
-import { PhotoItem, GridDensity } from '../types';
+import { MediaItem, GridDensity } from '../types';
 import { formatBytes } from '../utils/imageUtils';
 
 interface PhotoGridProps {
-  photos: PhotoItem[];
+  photos: MediaItem[];
   density: GridDensity;
   showMetadataOverlay: boolean;
-  onPhotoClick: (photo: PhotoItem, index: number) => void;
-  onToggleFavorite: (photoId: string) => void;
+  onPhotoClick: (item: MediaItem, index: number) => void;
+  onToggleFavorite: (itemId: string) => void;
   favoritesSet: Set<string>;
 }
 
@@ -30,17 +30,17 @@ export const PhotoGrid: React.FC<PhotoGridProps> = ({
 
   return (
     <div className={`grid ${gridClasses} w-full py-4`}>
-      {photos.map((photo, index) => (
-        <PhotoCard
-          key={photo.id}
-          photo={photo}
+      {photos.map((item, index) => (
+        <MediaCard
+          key={item.id}
+          item={item}
           index={index}
-          isFavorite={favoritesSet.has(photo.id)}
+          isFavorite={favoritesSet.has(item.id)}
           showMetadataOverlay={showMetadataOverlay}
-          onClick={() => onPhotoClick(photo, index)}
+          onClick={() => onPhotoClick(item, index)}
           onToggleFavorite={(e) => {
             e.stopPropagation();
-            onToggleFavorite(photo.id);
+            onToggleFavorite(item.id);
           }}
         />
       ))}
@@ -48,8 +48,8 @@ export const PhotoGrid: React.FC<PhotoGridProps> = ({
   );
 };
 
-interface PhotoCardProps {
-  photo: PhotoItem;
+interface MediaCardProps {
+  item: MediaItem;
   index: number;
   isFavorite: boolean;
   showMetadataOverlay: boolean;
@@ -57,8 +57,8 @@ interface PhotoCardProps {
   onToggleFavorite: (e: React.MouseEvent) => void;
 }
 
-const PhotoCard: React.FC<PhotoCardProps> = ({
-  photo,
+const MediaCard: React.FC<MediaCardProps> = ({
+  item,
   index,
   isFavorite,
   showMetadataOverlay,
@@ -67,6 +67,23 @@ const PhotoCard: React.FC<PhotoCardProps> = ({
 }) => {
   const [isLoaded, setIsLoaded] = useState(false);
   const [hasError, setHasError] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const isVideo = item.mediaType === 'video';
+
+  const handleMouseEnter = () => {
+    if (isVideo && videoRef.current) {
+      videoRef.current.play().catch(() => {
+        // Autoplay may be restricted without user interaction
+      });
+    }
+  };
+
+  const handleMouseLeave = () => {
+    if (isVideo && videoRef.current) {
+      videoRef.current.pause();
+      videoRef.current.currentTime = 0;
+    }
+  };
 
   return (
     <motion.div
@@ -74,10 +91,12 @@ const PhotoCard: React.FC<PhotoCardProps> = ({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.25, delay: Math.min(index * 0.02, 0.3) }}
       onClick={onClick}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
       className="group relative cursor-pointer overflow-hidden rounded-2xl bg-neutral-900 border border-neutral-800/80 shadow-md hover:border-amber-500/50 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
     >
       {/* Aspect Ratio Container */}
-      <div className="relative aspect-square w-full overflow-hidden bg-neutral-950/60">
+      <div className="relative aspect-square w-full overflow-hidden bg-neutral-950/60 flex items-center justify-center">
         {/* Skeleton Placeholder while loading */}
         {!isLoaded && !hasError && (
           <div className="absolute inset-0 flex items-center justify-center bg-neutral-900 animate-pulse">
@@ -85,17 +104,44 @@ const PhotoCard: React.FC<PhotoCardProps> = ({
           </div>
         )}
 
-        {/* Broken image fallback */}
+        {/* Broken media fallback */}
         {hasError ? (
           <div className="absolute inset-0 flex flex-col items-center justify-center p-3 text-center text-neutral-500">
             <ImageOff className="w-8 h-8 mb-1 text-neutral-600" />
-            <span className="text-[11px] truncate max-w-full">{photo.name}</span>
-            <span className="text-[9px] text-neutral-600 mt-0.5">Corrupted / Unreadable</span>
+            <span className="text-[11px] truncate max-w-full">{item.name}</span>
+            <span className="text-[9px] text-neutral-600 mt-0.5">Unreadable Media</span>
+          </div>
+        ) : isVideo ? (
+          /* Video Thumbnail / Preview */
+          <div className="relative w-full h-full">
+            <video
+              ref={videoRef}
+              src={item.url}
+              preload="metadata"
+              muted
+              playsInline
+              loop
+              onLoadedData={() => setIsLoaded(true)}
+              onError={() => {
+                setHasError(true);
+                setIsLoaded(true);
+              }}
+              className={`h-full w-full object-cover transition-transform duration-500 group-hover:scale-105 ${
+                isLoaded ? 'opacity-100' : 'opacity-0'
+              }`}
+            />
+            {/* Centered Play Button Indicator */}
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none group-hover:scale-110 transition-transform">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-black/60 backdrop-blur-md border border-white/20 text-white shadow-lg">
+                <Play className="w-4 h-4 fill-white ml-0.5" />
+              </div>
+            </div>
           </div>
         ) : (
+          /* Photo Image */
           <img
-            src={photo.url}
-            alt={photo.name}
+            src={item.url}
+            alt={item.name}
             loading="lazy"
             decoding="async"
             referrerPolicy="no-referrer"
@@ -111,9 +157,16 @@ const PhotoCard: React.FC<PhotoCardProps> = ({
         )}
 
         {/* Top Badges (Format + Favorite Button) */}
-        <div className="absolute top-2 left-2 right-2 flex items-center justify-between pointer-events-none">
-          <span className="px-2 py-0.5 rounded-md bg-black/60 backdrop-blur-md text-[10px] font-bold tracking-wider uppercase text-neutral-300 border border-white/10 shadow-sm">
-            {photo.extension}
+        <div className="absolute top-2 left-2 right-2 flex items-center justify-between pointer-events-none z-10">
+          <span
+            className={`flex items-center gap-1 px-2 py-0.5 rounded-md backdrop-blur-md text-[10px] font-bold tracking-wider uppercase border shadow-sm ${
+              isVideo
+                ? 'bg-amber-500/80 text-neutral-950 border-amber-400/50'
+                : 'bg-black/60 text-neutral-300 border-white/10'
+            }`}
+          >
+            {isVideo && <Video className="w-2.5 h-2.5" />}
+            <span>{item.extension}</span>
           </span>
 
           <button
@@ -132,27 +185,20 @@ const PhotoCard: React.FC<PhotoCardProps> = ({
 
         {/* Bottom Metadata Overlay */}
         <div
-          className={`absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent p-3 pt-6 text-left transition-opacity duration-200 ${
+          className={`absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent p-3 pt-6 text-left transition-opacity duration-200 z-10 ${
             showMetadataOverlay ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
           }`}
         >
           <div className="flex items-center justify-between gap-1">
-            <p className="text-xs font-semibold text-white truncate max-w-[80%]" title={photo.name}>
-              {photo.name}
+            <p className="text-xs font-semibold text-white truncate max-w-[80%]" title={item.name}>
+              {item.name}
             </p>
             <Maximize2 className="w-3.5 h-3.5 text-neutral-400 group-hover:text-amber-300 transition-colors shrink-0" />
           </div>
 
           <div className="mt-1 flex items-center justify-between text-[10px] text-neutral-400">
-            {photo.folder && photo.folder !== 'Root' ? (
-              <span className="flex items-center gap-1 truncate text-amber-300/90 font-medium">
-                <Folder className="w-2.5 h-2.5" />
-                <span className="truncate">{photo.folder}</span>
-              </span>
-            ) : (
-              <span>{formatBytes(photo.size)}</span>
-            )}
-            <span>{formatBytes(photo.size)}</span>
+            <span className="capitalize">{item.mediaType}</span>
+            <span>{formatBytes(item.size)}</span>
           </div>
         </div>
       </div>

@@ -3,13 +3,13 @@ import {
   RefreshCw,
   Settings,
   Lock,
-  Image as ImageIcon,
   Plus,
   UploadCloud,
   CheckCircle2,
   HardDrive,
+  Film,
 } from 'lucide-react';
-import { PhotoItem, GallerySettings, FilterExtension, SortOption } from '../types';
+import { MediaItem, GallerySettings, FilterExtension, SortOption } from '../types';
 import { comparePhotos } from '../utils/imageUtils';
 import { getFavoriteIds, toggleFavoriteId } from '../utils/favorites';
 import { SearchBar } from './SearchBar';
@@ -19,9 +19,9 @@ import { SettingsPanel } from './SettingsPanel';
 import { PWAInstallButton } from './PWAInstallButton';
 
 interface GalleryProps {
-  photos: PhotoItem[];
+  photos: MediaItem[];
   folderName: string;
-  onUpdatePhotos: (photos: PhotoItem[]) => void;
+  onUpdatePhotos: (photos: MediaItem[]) => void;
   onAddPhotos: (files: File[]) => Promise<void>;
   onDeletePhoto: (photoId: string) => Promise<void>;
   onRefresh: () => Promise<void>;
@@ -44,7 +44,6 @@ export const Gallery: React.FC<GalleryProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<FilterExtension>('ALL');
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
-  const [selectedFolderFilter, setSelectedFolderFilter] = useState<string | null>(null);
   const [currentSort, setCurrentSort] = useState<SortOption>(settings.defaultSort);
 
   // Favorites state
@@ -70,32 +69,23 @@ export const Gallery: React.FC<GalleryProps> = ({
     setFavoritesSet(getFavoriteIds());
   };
 
-  // Collect unique subfolders
-  const availableFolders = useMemo(() => {
-    const set = new Set<string>();
-    photos.forEach((p) => {
-      if (p.folder && p.folder !== 'Root' && p.folder !== 'General') {
-        set.add(p.folder);
-      }
-    });
-    return Array.from(set);
-  }, [photos]);
-
-  // Filter and sort photos
+  // Filter and sort media
   const filteredPhotos = useMemo(() => {
     return photos
-      .filter((photo) => {
-        // Search query: filename and relative path
+      .filter((item) => {
+        // Search query: filename
         if (searchQuery.trim()) {
           const q = searchQuery.toLowerCase();
-          const matchesName = photo.name.toLowerCase().includes(q);
-          const matchesPath = photo.relativePath.toLowerCase().includes(q);
-          if (!matchesName && !matchesPath) return false;
+          if (!item.name.toLowerCase().includes(q)) return false;
         }
 
-        // Extension filter
-        if (activeFilter !== 'ALL') {
-          const ext = photo.extension.toUpperCase();
+        // Media Type or Format Filter
+        if (activeFilter === 'PHOTOS') {
+          if (item.mediaType !== 'image') return false;
+        } else if (activeFilter === 'VIDEOS') {
+          if (item.mediaType !== 'video') return false;
+        } else if (activeFilter !== 'ALL') {
+          const ext = item.extension.toUpperCase();
           if (activeFilter === 'JPG') {
             if (ext !== 'JPG' && ext !== 'JPEG') return false;
           } else if (ext !== activeFilter) {
@@ -104,27 +94,26 @@ export const Gallery: React.FC<GalleryProps> = ({
         }
 
         // Favorites filter
-        if (showFavoritesOnly && !favoritesSet.has(photo.id)) {
-          return false;
-        }
-
-        // Subfolder filter
-        if (selectedFolderFilter && photo.folder !== selectedFolderFilter) {
+        if (showFavoritesOnly && !favoritesSet.has(item.id)) {
           return false;
         }
 
         return true;
       })
       .sort((a, b) => comparePhotos(a, b, currentSort));
-  }, [photos, searchQuery, activeFilter, showFavoritesOnly, selectedFolderFilter, currentSort, favoritesSet]);
+  }, [photos, searchQuery, activeFilter, showFavoritesOnly, currentSort, favoritesSet]);
 
-  // Rescan / Refresh photos
+  // Counts
+  const videoCount = useMemo(() => photos.filter((p) => p.mediaType === 'video').length, [photos]);
+  const photoCount = useMemo(() => photos.filter((p) => p.mediaType === 'image').length, [photos]);
+
+  // Rescan / Refresh photos and videos
   const handleRefresh = useCallback(async () => {
     setIsRefreshing(true);
     setStatusNotification(null);
     try {
       await onRefresh();
-      setStatusNotification('Photos refreshed from permanent folder & vault.');
+      setStatusNotification('Refreshed media from permanent folder & vault.');
       setTimeout(() => setStatusNotification(null), 3000);
     } catch {
       setStatusNotification('Refresh failed.');
@@ -134,28 +123,32 @@ export const Gallery: React.FC<GalleryProps> = ({
     }
   }, [onRefresh]);
 
-  // Handle adding photos via file input or drag-and-drop
+  // Handle adding photos and videos
   const handleFilesSelected = async (fileList: FileList | null) => {
     if (!fileList || fileList.length === 0) return;
     const validFiles: File[] = [];
     for (let i = 0; i < fileList.length; i++) {
       const file = fileList[i];
-      if (file.type.startsWith('image/') || /\.(jpe?g|png|webp|gif|avif|svg)$/i.test(file.name)) {
+      if (
+        file.type.startsWith('image/') ||
+        file.type.startsWith('video/') ||
+        /\.(jpe?g|png|webp|gif|avif|svg|mp4|webm|mov|ogg|mkv|m4v)$/i.test(file.name)
+      ) {
         validFiles.push(file);
       }
     }
 
     if (validFiles.length === 0) {
-      alert('Please select valid image files (.jpg, .png, .webp, .gif, .avif, .svg).');
+      alert('Please select supported image or video files (.mp4, .webm, .mov, .jpg, .png, .webp, .gif, .avif).');
       return;
     }
 
     try {
       await onAddPhotos(validFiles);
-      setStatusNotification(`Added ${validFiles.length} photo${validFiles.length === 1 ? '' : 's'} permanently to your vault!`);
+      setStatusNotification(`Added ${validFiles.length} media item${validFiles.length === 1 ? '' : 's'} permanently to your vault!`);
       setTimeout(() => setStatusNotification(null), 3500);
     } catch (err) {
-      console.warn('Failed to save photos to vault:', err);
+      console.warn('Failed to save media to vault:', err);
     }
   };
 
@@ -215,7 +208,7 @@ export const Gallery: React.FC<GalleryProps> = ({
           : 'bg-neutral-950 text-neutral-100'
       }`}
     >
-      {/* Hidden File Input for Add Photos */}
+      {/* Hidden File Input for Add Media (Images + Videos) */}
       <input
         type="file"
         ref={fileInputRef}
@@ -224,7 +217,7 @@ export const Gallery: React.FC<GalleryProps> = ({
           e.target.value = '';
         }}
         multiple
-        accept="image/*,.jpg,.jpeg,.png,.webp,.gif,.avif,.svg"
+        accept="image/*,video/*,.mp4,.webm,.mov,.ogg,.mkv,.jpg,.jpeg,.png,.webp,.gif,.avif,.svg"
         className="hidden"
       />
 
@@ -233,9 +226,9 @@ export const Gallery: React.FC<GalleryProps> = ({
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md border-4 border-dashed border-amber-500 pointer-events-none">
           <div className="text-center p-8 rounded-3xl bg-neutral-900/90 border border-neutral-800 shadow-2xl">
             <UploadCloud className="w-16 h-16 text-amber-400 mx-auto animate-bounce mb-4" />
-            <h2 className="text-xl font-bold text-white">Drop images to add to your Private Vault</h2>
+            <h2 className="text-xl font-bold text-white">Drop photos & videos into your Private Vault</h2>
             <p className="mt-1 text-sm text-neutral-400">
-              Photos are permanently and securely stored on your local device.
+              Media is permanently and securely stored on your local device.
             </p>
           </div>
         </div>
@@ -250,10 +243,10 @@ export const Gallery: React.FC<GalleryProps> = ({
         }`}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-18 flex items-center justify-between gap-4">
-          {/* Brand & Photo Counter */}
+          {/* Brand & Media Counter */}
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-tr from-amber-600 to-amber-400 text-neutral-950 shadow-md">
-              <ImageIcon className="h-5 w-5" />
+              <Film className="h-5 w-5" />
             </div>
 
             <div>
@@ -268,34 +261,36 @@ export const Gallery: React.FC<GalleryProps> = ({
                       : 'bg-neutral-800 text-neutral-300'
                   }`}
                 >
-                  {photos.length} {photos.length === 1 ? 'Photo' : 'Photos'}
+                  {photos.length} {photos.length === 1 ? 'Item' : 'Items'}
                 </span>
               </div>
               <p
-                className="text-xs text-neutral-400 truncate max-w-[160px] sm:max-w-xs flex items-center gap-1"
+                className="text-xs text-neutral-400 truncate max-w-[180px] sm:max-w-xs flex items-center gap-1.5"
                 title={`Permanent Folder: ${folderName}`}
               >
                 <HardDrive className="w-3 h-3 text-amber-500 shrink-0" />
-                <span>{folderName}</span>
+                <span>{photoCount} Photos</span>
+                <span>•</span>
+                <span>{videoCount} Videos</span>
               </p>
             </div>
           </div>
 
-          {/* Action Buttons: Add Photos, Refresh, Settings, Lock */}
+          {/* Action Buttons: Add Media, Refresh, Settings, Lock */}
           <div className="flex items-center gap-1.5 sm:gap-2">
             {/* PWA Compact install */}
             <PWAInstallButton compact />
 
-            {/* Add Photos Button */}
+            {/* Add Media Button */}
             <button
-              id="btn-add-photos"
+              id="btn-add-media"
               type="button"
               onClick={() => fileInputRef.current?.click()}
               className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-amber-500 hover:bg-amber-400 text-neutral-950 shadow-md transition-all cursor-pointer active:scale-95"
-              title="Add photos permanently to your secure vault"
+              title="Add photos & videos permanently to your vault"
             >
               <Plus className="w-4 h-4" />
-              <span>Add Photos</span>
+              <span>Add Media</span>
             </button>
 
             {/* Refresh Button */}
@@ -325,7 +320,7 @@ export const Gallery: React.FC<GalleryProps> = ({
                   ? 'bg-neutral-50 hover:bg-neutral-100 border-neutral-300 text-neutral-700'
                   : 'bg-neutral-900 hover:bg-neutral-800 border-neutral-800 text-neutral-200'
               }`}
-              title="Gallery Settings"
+              title="Vault Settings"
             >
               <Settings className="w-4 h-4" />
             </button>
@@ -336,7 +331,7 @@ export const Gallery: React.FC<GalleryProps> = ({
               type="button"
               onClick={onLogout}
               className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/25 transition-all cursor-pointer active:scale-95"
-              title="Lock Gallery"
+              title="Lock Vault"
             >
               <Lock className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">Lock</span>
@@ -368,14 +363,11 @@ export const Gallery: React.FC<GalleryProps> = ({
           favoriteCount={favoritesSet.size}
           sortOption={currentSort}
           onSortChange={setCurrentSort}
-          availableFolders={availableFolders}
-          selectedFolderFilter={selectedFolderFilter}
-          onFolderFilterChange={setSelectedFolderFilter}
           totalFilteredCount={filteredPhotos.length}
           totalOriginalCount={photos.length}
         />
 
-        {/* Empty state: If folder has zero photos */}
+        {/* Empty state: If folder has zero media */}
         {photos.length === 0 && (
           <div
             onClick={() => fileInputRef.current?.click()}
@@ -386,22 +378,22 @@ export const Gallery: React.FC<GalleryProps> = ({
             </div>
             <h3 className="text-lg font-bold text-white">Your Private Vault is Ready</h3>
             <p className="mt-1 text-sm text-neutral-400 max-w-md">
-              Drag and drop your photos anywhere, or click to add images directly into your permanent secure vault.
+              Drag and drop photos or videos anywhere, or click to add files directly into your permanent secure vault.
             </p>
             <button
               type="button"
               className="mt-6 flex items-center gap-2 px-5 py-2.5 rounded-xl bg-amber-500 text-neutral-950 font-bold text-xs hover:bg-amber-400 transition"
             >
               <Plus className="w-4 h-4" />
-              <span>Add Photos to Vault</span>
+              <span>Add Media to Vault</span>
             </button>
           </div>
         )}
 
-        {/* Empty state: If filters yield zero photos */}
+        {/* Empty state: If filters yield zero media */}
         {photos.length > 0 && filteredPhotos.length === 0 && (
           <div className="py-16 flex flex-col items-center justify-center text-center">
-            <h3 className="text-base font-semibold text-white">No matching photos</h3>
+            <h3 className="text-base font-semibold text-white">No matching media</h3>
             <p className="mt-1 text-xs text-neutral-400">
               Try adjusting your search keywords, format filters, or favorites toggle.
             </p>
@@ -410,7 +402,6 @@ export const Gallery: React.FC<GalleryProps> = ({
                 setSearchQuery('');
                 setActiveFilter('ALL');
                 setShowFavoritesOnly(false);
-                setSelectedFolderFilter(null);
               }}
               className="mt-4 text-xs font-semibold text-amber-400 hover:underline cursor-pointer"
             >
@@ -419,7 +410,7 @@ export const Gallery: React.FC<GalleryProps> = ({
           </div>
         )}
 
-        {/* The Photo Grid */}
+        {/* The Media Grid */}
         {filteredPhotos.length > 0 && (
           <PhotoGrid
             photos={filteredPhotos}
@@ -432,7 +423,7 @@ export const Gallery: React.FC<GalleryProps> = ({
         )}
       </main>
 
-      {/* Fullscreen Lightbox Viewer */}
+      {/* Fullscreen Lightbox Viewer (Images & Videos) */}
       {viewerIndex !== null && (
         <PhotoViewer
           photos={filteredPhotos}

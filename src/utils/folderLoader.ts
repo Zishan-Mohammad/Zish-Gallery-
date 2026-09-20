@@ -1,74 +1,81 @@
-import { PhotoItem } from '../types';
-import { loadPermanentVaultPhotos, savePhotosToVault, deletePhotoFromVault } from './vaultStorage';
+import { MediaItem } from '../types';
+import {
+  loadPermanentVaultMedia,
+  saveMediaToVault,
+  deleteMediaFromVault,
+  detectMediaType,
+} from './vaultStorage';
 
-// Automatically glob all images inside the permanent src/photos folder!
-// Supported extensions: jpg, jpeg, png, webp, gif, avif, svg
-const bundledPhotoModules = import.meta.glob<string>(
-  '/src/photos/**/*.{jpg,jpeg,png,webp,gif,avif,svg,JPG,JPEG,PNG,WEBP,GIF,AVIF,SVG}',
+// Automatically glob all photos and videos inside the permanent src/photos folder
+const bundledMediaModules = import.meta.glob<string>(
+  '/src/photos/**/*.{jpg,jpeg,png,webp,gif,avif,svg,mp4,webm,mov,ogg,m4v,mkv,JPG,JPEG,PNG,WEBP,GIF,AVIF,SVG,MP4,WEBM,MOV,OGG,M4V,MKV}',
   { eager: true, query: '?url', import: 'default' }
 );
 
 /**
- * Extract photos from the permanent folder bundled with the application
+ * Extract media from the permanent folder bundled with the application
  */
-export function getPermanentFolderPhotos(): PhotoItem[] {
-  const items: PhotoItem[] = [];
+export function getPermanentFolderMedia(): MediaItem[] {
+  const items: MediaItem[] = [];
 
-  for (const [filePath, url] of Object.entries(bundledPhotoModules)) {
-    // filePath is e.g. "/src/photos/Vacation/tropical_beach.svg"
-    const cleanedPath = filePath.replace('/src/photos/', '');
-    const pathParts = cleanedPath.split('/');
-    const fileName = pathParts[pathParts.length - 1];
-    const folder = pathParts.length > 1 ? pathParts[pathParts.length - 2] : 'Permanent';
-    const ext = fileName.split('.').pop()?.toLowerCase() || 'jpg';
+  for (const [filePath, url] of Object.entries(bundledMediaModules)) {
+    // filePath is e.g. "/src/photos/sample_timelapse.mp4"
+    const fileName = filePath.split('/').pop() || 'media';
+    const ext = fileName.split('.').pop()?.toLowerCase() || '';
+    const mediaType = detectMediaType(fileName);
 
     items.push({
-      id: `folder_${cleanedPath}`,
+      id: `folder_${fileName}`,
       name: fileName,
-      relativePath: cleanedPath,
-      folder: folder,
+      relativePath: fileName,
+      mediaType,
       extension: ext,
-      size: 1024 * 1024 * 1.5, // approximate placeholder size
-      lastModified: Date.now() - 86400000 * 3,
-      url: url,
+      size: mediaType === 'video' ? 1024 * 1024 * 4.2 : 1024 * 1024 * 1.5,
+      lastModified: Date.now() - 86400000 * 2,
+      url,
     });
   }
 
   return items;
 }
 
-/**
- * Load all permanently accessible photos:
- * 1. Photos from the permanent `photos/` folder
- * 2. Photos saved permanently in the browser's IndexedDB vault
- */
-export async function loadAllPermanentPhotos(): Promise<PhotoItem[]> {
-  const folderPhotos = getPermanentFolderPhotos();
-  const vaultPhotos = await loadPermanentVaultPhotos();
+export const getPermanentFolderPhotos = getPermanentFolderMedia;
 
-  // Combine and deduplicate by relativePath / id
-  const map = new Map<string, PhotoItem>();
-  folderPhotos.forEach((p) => map.set(p.id, p));
-  vaultPhotos.forEach((p) => map.set(p.id, p));
+/**
+ * Load all permanently accessible media:
+ * 1. Media from the permanent `photos/` folder
+ * 2. Media saved permanently in the browser's IndexedDB vault
+ */
+export async function loadAllPermanentMedia(): Promise<MediaItem[]> {
+  const folderMedia = getPermanentFolderMedia();
+  const vaultMedia = await loadPermanentVaultMedia();
+
+  // Combine and deduplicate by id
+  const map = new Map<string, MediaItem>();
+  folderMedia.forEach((m) => map.set(m.id, m));
+  vaultMedia.forEach((m) => map.set(m.id, m));
 
   return Array.from(map.values());
 }
 
-/**
- * Add images permanently to the secure vault
- */
-export async function addPhotosToSecureVault(
-  files: File[],
-  defaultFolder = 'Vault'
-): Promise<PhotoItem[]> {
-  return await savePhotosToVault(files, defaultFolder);
-}
+export const loadAllPermanentPhotos = loadAllPermanentMedia;
 
 /**
- * Delete photo from vault if it's user-stored
+ * Add images/videos permanently to the secure vault
  */
-export async function removePhoto(id: string): Promise<void> {
+export async function addMediaToSecureVault(files: File[]): Promise<MediaItem[]> {
+  return await saveMediaToVault(files);
+}
+
+export const addPhotosToSecureVault = addMediaToSecureVault;
+
+/**
+ * Delete media item from vault if it's user-stored
+ */
+export async function removeMedia(id: string): Promise<void> {
   if (id.startsWith('vault_')) {
-    await deletePhotoFromVault(id);
+    await deleteMediaFromVault(id);
   }
 }
+
+export const removePhoto = removeMedia;

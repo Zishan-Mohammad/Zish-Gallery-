@@ -149,10 +149,12 @@ export async function scanDirectoryHandle(
             const relPath = currentPath ? `${currentPath}/${entry.name}` : entry.name;
             const uniqueId = `${relPath}_${file.lastModified}_${file.size}`;
 
+            const isVideo = file.type?.startsWith('video/') || ['mp4', 'webm', 'mov', 'ogg'].includes(ext);
             results.push({
               id: uniqueId,
               name: entry.name,
               relativePath: relPath,
+              mediaType: isVideo ? 'video' : 'image',
               folder: folderName || 'Root',
               extension: ext,
               size: file.size,
@@ -210,10 +212,12 @@ export function scanFileList(files: FileList | File[], includeSubfolders = true)
       const objectUrl = registerObjectUrl(URL.createObjectURL(file));
       const uniqueId = `${relativePath}_${file.lastModified}_${file.size}`;
 
+      const isVideo = file.type?.startsWith('video/') || ['mp4', 'webm', 'mov', 'ogg'].includes(ext);
       results.push({
         id: uniqueId,
         name: file.name,
         relativePath,
+        mediaType: isVideo ? 'video' : 'image',
         folder,
         extension: ext,
         size: file.size,

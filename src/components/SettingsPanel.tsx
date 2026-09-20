@@ -4,7 +4,6 @@ import {
   Moon,
   Sun,
   Grid3X3,
-  Layers,
   ArrowUpDown,
   Lock,
   Check,
@@ -171,31 +170,11 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
             </div>
           </div>
 
-          {/* Folder Scanning Options */}
+          {/* Media & Sorting Options */}
           <div className="space-y-3 pt-4 border-t border-neutral-800">
             <label className="text-xs font-semibold text-neutral-400 uppercase tracking-wider block">
-              Folder & Scanning
+              Vault & Sorting
             </label>
-
-            <div className="flex items-center justify-between p-3.5 rounded-xl bg-neutral-950/70 border border-neutral-800">
-              <div className="flex items-center gap-3">
-                <Layers className="w-4 h-4 text-amber-400" />
-                <div>
-                  <p className="font-medium text-white text-xs sm:text-sm">Include Subfolders</p>
-                  <p className="text-[11px] text-neutral-400">Scan nested subdirectories recursively</p>
-                </div>
-              </div>
-              <input
-                type="checkbox"
-                id="toggle-subfolders-settings"
-                checked={settings.includeSubfolders}
-                onChange={(e) => {
-                  onUpdateSettings({ includeSubfolders: e.target.checked });
-                  onRefreshGallery();
-                }}
-                className="w-4 h-4 rounded border-neutral-700 text-amber-500 focus:ring-amber-500/40 bg-neutral-900 cursor-pointer"
-              />
-            </div>
 
             {/* Default Sort Option */}
             <div className="flex items-center justify-between p-3.5 rounded-xl bg-neutral-950/70 border border-neutral-800">

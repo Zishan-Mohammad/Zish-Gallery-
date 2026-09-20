@@ -1,17 +1,24 @@
-export interface PhotoItem {
+export type MediaType = 'image' | 'video';
+
+export interface MediaItem {
   id: string;
   name: string;
   relativePath: string;
-  folder: string;
+  mediaType: MediaType;
+  folder?: string;
   extension: string;
   size: number;
   lastModified: number;
   url: string;
   width?: number;
   height?: number;
+  duration?: number;
   fileHandle?: FileSystemFileHandle;
   isFavorite?: boolean;
 }
+
+// Backwards-compatibility alias
+export type PhotoItem = MediaItem;
 
 export type SortOption =
   | 'name-asc'
@@ -20,7 +27,21 @@ export type SortOption =
   | 'date-oldest'
   | 'size-desc';
 
-export type FilterExtension = 'ALL' | 'JPG' | 'PNG' | 'WEBP' | 'GIF' | 'AVIF';
+export type MediaTypeFilter = 'ALL' | 'PHOTOS' | 'VIDEOS';
+
+export type FilterExtension =
+  | 'ALL'
+  | 'PHOTOS'
+  | 'VIDEOS'
+  | 'MP4'
+  | 'WEBM'
+  | 'MOV'
+  | 'JPG'
+  | 'PNG'
+  | 'WEBP'
+  | 'GIF'
+  | 'AVIF'
+  | 'SVG';
 
 export type GridDensity = 'compact' | 'comfortable' | 'large';
 
@@ -29,7 +50,6 @@ export type ThemeMode = 'dark' | 'light';
 export interface GallerySettings {
   theme: ThemeMode;
   density: GridDensity;
-  includeSubfolders: boolean;
   defaultSort: SortOption;
   inactivityTimeoutMinutes: number; // 0 = off, 5, 10, 15, 30
   showMetadataOverlay: boolean;

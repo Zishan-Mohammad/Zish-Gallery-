@@ -1,47 +1,41 @@
-# Zish-Gallery: Private Password-Protected Photo Vault (Client-Side Only)
+# Zish-Gallery: Private Password-Protected Photo & Video Vault (Client-Side Only)
 
 > **Important Security & Privacy Disclaimer**  
-> **"This application provides client-side privacy features only. It does not provide server-side access control. Anyone who has access to the selected local folder or application source can potentially bypass client-side protection."**  
+> **"This application provides client-side privacy features only. It does not provide server-side access control. Anyone who has access to the local folder or application source can potentially bypass client-side protection."**  
 > Zish-Gallery is designed exclusively for personal and local privacy convenience. It does not advertise military-grade, server-grade, or tamper-proof encryption.
 
 ---
 
 ## 1. What the Application Does
 
-**Zish-Gallery** is a 100% frontend, private photo gallery web application where your images are permanently and securely accessible without requiring any folder selection dialogs or cloud uploads.
+**Zish-Gallery** is a 100% frontend private media vault where your photos and videos are permanently and securely accessible without requiring any folder selection dialogs, category compartments, or cloud servers.
 
-- **Zero Folder Prompts:** Open the site, enter your password, and your private photo gallery opens immediately.
-- **Permanent Local Storage:** Photos placed in the project's permanent `src/photos/` folder or added via the **"Add Photos"** / drag-and-drop tool are permanently saved locally on your device in persistent browser storage (IndexedDB).
-- **100% Client-Side & Zero Cloud:** No Node.js backend, Express, Python, PHP, Firebase, or Supabase. Everything runs entirely within the browser.
-- **Master Password Protection:** Secured by the browser's native Web Crypto API (SHA-256 with cryptographic salt), session lifecycle locking, and configurable inactivity auto-lock.
-- **Modern Responsive Gallery:** Density modes (Compact, Comfortable, Large), fullscreen lightbox with zoom, instant search, format filters, favorites, and keyboard/touch navigation.
+- **Unified Media Stream (No Compartments):** All photos and videos sit in a clean, flat media vault with zero compartments, subfolder tags, or category divisions.
+- **Full Video & Photo Support:** Supports `.mp4`, `.webm`, `.mov`, `.ogg`, `.mkv`, alongside `.jpg`, `.jpeg`, `.png`, `.webp`, `.gif`, `.avif`, `.svg`.
+- **In-Browser Video Playback & Previews:** Video thumbnails with hover preview and play indicators in the grid, and a full-featured video player in the lightbox viewer with play/pause, seek, volume, and fullscreen controls.
+- **Zero Cloud & Zero Uploads:** 100% client-side. No Node.js backend, Express, Python, PHP, Firebase, or Supabase.
+- **Master Passcode Protection:** Secured by the browser's native Web Crypto API (SHA-256 with cryptographic salt), session lifecycle locking, and configurable inactivity auto-lock.
 
 ---
 
-## 2. Where to Put Images Permanently
+## 2. Where to Put Images and Videos Permanently
 
-You have two easy ways to keep your photos in the vault permanently:
-
-### Option A: Place files into `src/photos/` (in the project codebase)
-Simply drop any `.jpg`, `.jpeg`, `.png`, `.webp`, `.gif`, `.avif`, or `.svg` files into the `src/photos/` folder:
+### Option A: Place files into `src/photos/`
+Simply place your images and videos directly into the `src/photos/` folder:
 ```text
 src/photos/
-├── vacation.jpg
-├── beach.png
-├── birthday.webp
-├── Family/
-│   ├── celebration.jpg
-│   └── portrait.png
-└── Vacation/
-    ├── resort.jpg
-    └── tropical_beach.svg
+├── sample_timelapse.mp4
+├── tropical_beach.svg
+├── mountain_aurora.svg
+├── city_sunset.svg
+└── celebration_fireworks.svg
 ```
-Vite will automatically detect and bundle them into your gallery without having to write any code or manual arrays!
+They are automatically bundled into your gallery without having to write any code or manual arrays!
 
-### Option B: Use "Add Photos" or Drag & Drop in the Web App
+### Option B: Use "Add Media" or Drag & Drop in the Web App
 1. Open the website and enter your master password (default: `zish2026`).
-2. Click the **"+ Add Photos"** button in the top bar, or simply drag and drop your photos directly onto the gallery window.
-3. The photos are permanently saved into your device's persistent browser database (IndexedDB) and remain accessible across browser restarts and reloads!
+2. Click the **"+ Add Media"** button in the top bar, or drag and drop photos and videos directly onto the gallery window.
+3. Media is saved permanently into your device's persistent browser database (IndexedDB) and remains accessible across browser reloads, restarts, and sessions!
 
 ---
 
@@ -55,22 +49,4 @@ npm install
 npm run dev
 ```
 
-Visit `http://localhost:3000`.
-
----
-
-## 4. How Password Protection Works
-
-- **Passcode Hashing:** Passwords are never saved in plaintext; they are salted and hashed using `crypto.subtle.digest('SHA-256')`.
-- **Default Master Password:** `zish2026`
-- **Changing Master Password:** Open **Settings** (gear icon) in the header. Enter your current password and your new password to update the vault key.
-- **Auto-Lock on Inactivity:** The gallery automatically locks itself if no user interaction is detected for the duration set in Settings (default: 15 minutes).
-- **Session Scoping:** When you close your browser tab or click **Lock**, the session token is removed from `sessionStorage`.
-
----
-
-## 5. Privacy Limitations & Security Notice
-
-- **No Remote Transmission:** Your photos and passwords are never transmitted over the internet or sent to any remote server.
-- **Device Access:** Anyone who has physical login access to your computer or device storage can view files in the local filesystem.
-- **Static Hosting:** Because there is no backend, you can deploy the generated static `dist/` build anywhere (GitHub Pages, Cloudflare Pages, Netlify, Vercel).
+Visit `http://localhost:3000`. Default password is `zish2026`.
