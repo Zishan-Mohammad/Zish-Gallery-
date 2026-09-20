@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#18181b" />
+      <stop offset="100%" stop-color="#09090b" />
+    </linearGradient>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fbbf24" />
+      <stop offset="100%" stop-color="#d97706" />
+    </linearGradient>
+    <linearGradient id="accentGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#60a5fa" />
+      <stop offset="100%" stop-color="#3b82f6" />
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#bgGrad)" stroke="#27272a" stroke-width="8" />
+  
+  <!-- Outer glowing ring -->
+  <circle cx="256" cy="256" r="180" fill="none" stroke="#27272a" stroke-width="4" stroke-dasharray="8 12" />
+  
+  <!-- Camera / Aperture Vault Frame -->
+  <rect x="136" y="156" width="240" height="200" rx="36" fill="#18181b" stroke="url(#goldGrad)" stroke-width="12" />
+  
+  <!-- Camera Top bump / flash -->
+  <path d="M 196 156 L 216 128 L 296 128 L 316 156 Z" fill="#27272a" stroke="url(#goldGrad)" stroke-width="8" stroke-linejoin="round" />
+  <circle cx="330" cy="186" r="10" fill="#ef4444" />
+  
+  <!-- Lens circle -->
+  <circle cx="256" cy="256" r="64" fill="#09090b" stroke="url(#goldGrad)" stroke-width="10" />
+  
+  <!-- Inner Lens reflections -->
+  <circle cx="256" cy="256" r="42" fill="#1e1e24" />
+  <path d="M 235 235 Q 256 220 277 235 Q 260 250 235 235 Z" fill="#60a5fa" opacity="0.6" />
+  
+  <!-- Lock badge at bottom right -->
+  <circle cx="356" cy="356" r="46" fill="#09090b" stroke="#3f3f46" stroke-width="4" />
+  <circle cx="356" cy="356" r="40" fill="url(#goldGrad)" />
+  <rect x="340" y="346" width="32" height="26" rx="6" fill="#09090b" />
+  <path d="M 346 346 V 336 A 10 10 0 0 1 366 336 V 346" fill="none" stroke="#09090b" stroke-width="5" stroke-linecap="round" />
+  <circle cx="356" cy="358" r="3" fill="url(#goldGrad)" />
+</svg>

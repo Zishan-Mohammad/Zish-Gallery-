@@ -1,0 +1,26 @@
+{
+  "id": "/",
+  "name": "Zish-Gallery - Private Photo Vault",
+  "short_name": "ZishGallery",
+  "description": "Private, client-side, password-protected photo gallery reading directly from your device's local folder.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "theme_color": "#090a0f",
+  "background_color": "#090a0f",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

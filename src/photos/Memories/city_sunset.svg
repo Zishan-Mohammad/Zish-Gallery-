@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" width="1600" height="1000">
+  <defs>
+    <linearGradient id="sunsetGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#4c0519" />
+      <stop offset="40%" stop-color="#881337" />
+      <stop offset="70%" stop-color="#e11d48" />
+      <stop offset="100%" stop-color="#fbbf24" />
+    </linearGradient>
+  </defs>
+  <rect width="1600" height="1000" fill="url(#sunsetGrad)" />
+  <!-- Giant Sun -->
+  <circle cx="800" cy="550" r="160" fill="#fef08a" opacity="0.9" />
+  
+  <!-- City Skyline silhouettes -->
+  <rect x="100" y="450" width="120" height="400" fill="#0f172a" />
+  <rect x="250" y="380" width="160" height="470" fill="#020617" />
+  <rect x="440" y="520" width="100" height="330" fill="#0f172a" />
+  <polygon points="590,300 590,850 720,850 720,300 655,200" fill="#020617" />
+  <rect x="750" y="420" width="140" height="430" fill="#0f172a" />
+  <rect x="920" y="340" width="180" height="510" fill="#020617" />
+  <rect x="1130" y="480" width="110" height="370" fill="#0f172a" />
+  <rect x="1270" y="410" width="160" height="440" fill="#020617" />
+  
+  <!-- Water Reflection -->
+  <rect y="850" width="1600" height="150" fill="#1e1b4b" />
+  <ellipse cx="800" cy="910" rx="350" ry="18" fill="#fbbf24" opacity="0.4" filter="blur(8px)" />
+</svg>
