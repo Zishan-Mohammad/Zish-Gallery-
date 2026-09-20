@@ -1,1 +1,18 @@
 @import "tailwindcss";
+
+@layer base {
+  html, body {
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    overscroll-behavior-y: none;
+  }
+}
+
+/* Hide scrollbar for clean horizontal mobile filter scrolling */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

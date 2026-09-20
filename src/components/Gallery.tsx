@@ -8,6 +8,8 @@ import {
   CheckCircle2,
   HardDrive,
   Film,
+  Image as ImageIcon,
+  Heart,
 } from 'lucide-react';
 import { MediaItem, GallerySettings, FilterExtension, SortOption } from '../types';
 import { comparePhotos } from '../utils/imageUtils';
@@ -242,42 +244,41 @@ export const Gallery: React.FC<GalleryProps> = ({
             : 'bg-neutral-950/85 border-neutral-800/80 shadow-lg'
         }`}
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-18 flex items-center justify-between gap-4">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-15 sm:h-18 flex items-center justify-between gap-2 sm:gap-4">
           {/* Brand & Media Counter */}
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-tr from-amber-600 to-amber-400 text-neutral-950 shadow-md">
-              <Film className="h-5 w-5" />
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+            <div className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-xl bg-gradient-to-tr from-amber-600 to-amber-400 text-neutral-950 shadow-md shrink-0">
+              <Film className="h-4 w-4 sm:h-5 sm:w-5" />
             </div>
 
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-bold uppercase tracking-wider text-amber-500">
-                  Private Vault
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <span className="text-xs font-bold uppercase tracking-wider text-amber-500 truncate">
+                  Zish-Gallery
                 </span>
                 <span
-                  className={`text-[11px] px-2 py-0.5 rounded-full font-semibold ${
+                  className={`text-[10px] sm:text-[11px] px-1.5 sm:px-2 py-0.5 rounded-full font-semibold shrink-0 ${
                     settings.theme === 'light'
                       ? 'bg-neutral-200 text-neutral-700'
                       : 'bg-neutral-800 text-neutral-300'
                   }`}
                 >
-                  {photos.length} {photos.length === 1 ? 'Item' : 'Items'}
+                  {photos.length}
                 </span>
               </div>
               <p
-                className="text-xs text-neutral-400 truncate max-w-[180px] sm:max-w-xs flex items-center gap-1.5"
+                className="text-[11px] text-neutral-400 truncate max-w-[130px] sm:max-w-xs flex items-center gap-1 sm:gap-1.5"
                 title={`Permanent Folder: ${folderName}`}
               >
-                <HardDrive className="w-3 h-3 text-amber-500 shrink-0" />
-                <span>{photoCount} Photos</span>
+                <span>{photoCount}p</span>
                 <span>•</span>
-                <span>{videoCount} Videos</span>
+                <span>{videoCount}v</span>
               </p>
             </div>
           </div>
 
           {/* Action Buttons: Add Media, Refresh, Settings, Lock */}
-          <div className="flex items-center gap-1.5 sm:gap-2">
+          <div className="flex items-center gap-1 sm:gap-2 shrink-0">
             {/* PWA Compact install */}
             <PWAInstallButton compact />
 
@@ -286,11 +287,12 @@ export const Gallery: React.FC<GalleryProps> = ({
               id="btn-add-media"
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-amber-500 hover:bg-amber-400 text-neutral-950 shadow-md transition-all cursor-pointer active:scale-95"
+              className="flex items-center gap-1.5 px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-xl text-xs font-bold bg-amber-500 hover:bg-amber-400 text-neutral-950 shadow-md transition-all cursor-pointer active:scale-95 min-h-[38px]"
               title="Add photos & videos permanently to your vault"
             >
               <Plus className="w-4 h-4" />
-              <span>Add Media</span>
+              <span className="hidden sm:inline">Add Media</span>
+              <span className="sm:hidden text-[11px] font-bold">Add</span>
             </button>
 
             {/* Refresh Button */}
@@ -299,7 +301,7 @@ export const Gallery: React.FC<GalleryProps> = ({
               type="button"
               onClick={handleRefresh}
               disabled={isRefreshing}
-              className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
+              className={`flex items-center justify-center p-2 sm:px-3 sm:py-2 rounded-xl text-xs font-semibold border transition-all cursor-pointer min-h-[38px] min-w-[38px] ${
                 settings.theme === 'light'
                   ? 'bg-neutral-50 hover:bg-neutral-100 border-neutral-300 text-neutral-700'
                   : 'bg-neutral-900 hover:bg-neutral-800 border-neutral-800 text-neutral-200'
@@ -307,7 +309,7 @@ export const Gallery: React.FC<GalleryProps> = ({
               title="Rescan permanent folder and vault"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin text-amber-400' : ''}`} />
-              <span className="hidden md:inline">Refresh</span>
+              <span className="hidden md:inline ml-1.5">Refresh</span>
             </button>
 
             {/* Settings Button */}
@@ -315,7 +317,7 @@ export const Gallery: React.FC<GalleryProps> = ({
               id="btn-open-settings"
               type="button"
               onClick={() => setShowSettings(true)}
-              className={`p-2 rounded-xl border transition-all cursor-pointer ${
+              className={`p-2 rounded-xl border transition-all cursor-pointer min-h-[38px] min-w-[38px] flex items-center justify-center ${
                 settings.theme === 'light'
                   ? 'bg-neutral-50 hover:bg-neutral-100 border-neutral-300 text-neutral-700'
                   : 'bg-neutral-900 hover:bg-neutral-800 border-neutral-800 text-neutral-200'
@@ -330,11 +332,11 @@ export const Gallery: React.FC<GalleryProps> = ({
               id="btn-gallery-logout"
               type="button"
               onClick={onLogout}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/25 transition-all cursor-pointer active:scale-95"
+              className="flex items-center justify-center p-2 sm:px-3 sm:py-2 rounded-xl text-xs font-semibold bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/25 transition-all cursor-pointer active:scale-95 min-h-[38px] min-w-[38px]"
               title="Lock Vault"
             >
               <Lock className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Lock</span>
+              <span className="hidden sm:inline ml-1.5">Lock</span>
             </button>
           </div>
         </div>
@@ -351,7 +353,7 @@ export const Gallery: React.FC<GalleryProps> = ({
       )}
 
       {/* Main Content Area */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <main className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 pb-24 sm:pb-8">
         {/* Search & Filter Toolbar */}
         <SearchBar
           searchQuery={searchQuery}
@@ -365,6 +367,8 @@ export const Gallery: React.FC<GalleryProps> = ({
           onSortChange={setCurrentSort}
           totalFilteredCount={filteredPhotos.length}
           totalOriginalCount={photos.length}
+          density={settings.density}
+          onDensityChange={(density) => onUpdateSettings({ density })}
         />
 
         {/* Empty state: If folder has zero media */}
@@ -422,6 +426,90 @@ export const Gallery: React.FC<GalleryProps> = ({
           />
         )}
       </main>
+
+      {/* Mobile Bottom Navigation Bar (Phone-First UX) */}
+      <nav
+        aria-label="Mobile Navigation"
+        className="sm:hidden fixed bottom-0 inset-x-0 z-40 bg-neutral-950/95 backdrop-blur-xl border-t border-neutral-800/80 px-3 py-1.5 pb-[max(0.6rem,env(safe-area-inset-bottom))] shadow-2xl transition-colors"
+      >
+        <div className="flex items-center justify-between max-w-md mx-auto">
+          {/* All Media */}
+          <button
+            type="button"
+            onClick={() => {
+              setActiveFilter('ALL');
+              setShowFavoritesOnly(false);
+            }}
+            className={`flex flex-col items-center justify-center p-1.5 rounded-xl transition-all min-w-[52px] ${
+              activeFilter === 'ALL' && !showFavoritesOnly
+                ? 'text-amber-400 font-bold'
+                : 'text-neutral-400 hover:text-white'
+            }`}
+          >
+            <HardDrive className="w-4 h-4" />
+            <span className="text-[10px] mt-0.5">All</span>
+          </button>
+
+          {/* Photos Filter */}
+          <button
+            type="button"
+            onClick={() => {
+              setActiveFilter('PHOTOS');
+              setShowFavoritesOnly(false);
+            }}
+            className={`flex flex-col items-center justify-center p-1.5 rounded-xl transition-all min-w-[52px] ${
+              activeFilter === 'PHOTOS' && !showFavoritesOnly
+                ? 'text-amber-400 font-bold'
+                : 'text-neutral-400 hover:text-white'
+            }`}
+          >
+            <ImageIcon className="w-4 h-4" />
+            <span className="text-[10px] mt-0.5">Photos</span>
+          </button>
+
+          {/* Center Add Button */}
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="flex items-center justify-center -mt-5 h-12 w-12 rounded-full bg-gradient-to-tr from-amber-500 to-amber-400 text-neutral-950 shadow-lg shadow-amber-500/30 active:scale-90 border-2 border-neutral-950 cursor-pointer"
+            title="Add Media to Vault"
+            aria-label="Add photos or videos"
+          >
+            <Plus className="w-6 h-6 stroke-[2.5]" />
+          </button>
+
+          {/* Videos Filter */}
+          <button
+            type="button"
+            onClick={() => {
+              setActiveFilter('VIDEOS');
+              setShowFavoritesOnly(false);
+            }}
+            className={`flex flex-col items-center justify-center p-1.5 rounded-xl transition-all min-w-[52px] ${
+              activeFilter === 'VIDEOS' && !showFavoritesOnly
+                ? 'text-amber-400 font-bold'
+                : 'text-neutral-400 hover:text-white'
+            }`}
+          >
+            <Film className="w-4 h-4" />
+            <span className="text-[10px] mt-0.5">Videos</span>
+          </button>
+
+          {/* Favorites Filter */}
+          <button
+            type="button"
+            onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
+            className={`flex flex-col items-center justify-center p-1.5 rounded-xl transition-all min-w-[52px] ${
+              showFavoritesOnly
+                ? 'text-rose-400 font-bold'
+                : 'text-neutral-400 hover:text-white'
+            }`}
+          >
+            <Heart className={`w-4 h-4 ${showFavoritesOnly ? 'fill-rose-400' : ''}`} />
+            <span className="text-[10px] mt-0.5">Favorites</span>
+          </button>
+        </div>
+      </nav>
 
       {/* Fullscreen Lightbox Viewer (Images & Videos) */}
       {viewerIndex !== null && (

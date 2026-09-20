@@ -12,6 +12,23 @@ const bundledMediaModules = import.meta.glob<string>(
   { eager: true, query: '?url', import: 'default' }
 );
 
+function extractDateFromFileName(fileName: string): number {
+  // Try matching YYYYMMDD or YYYY-MM-DD or YYYY_MM_DD
+  const match = fileName.match(/(\d{4})[-_]?(\d{2})[-_]?(\d{2})(?:[-_]?(\d{2})[-_]?(\d{2})[-_]?(\d{2}))?/);
+  if (match) {
+    const year = parseInt(match[1], 10);
+    const month = parseInt(match[2], 10) - 1;
+    const day = parseInt(match[3], 10);
+    const hour = match[4] ? parseInt(match[4], 10) : 12;
+    const min = match[5] ? parseInt(match[5], 10) : 0;
+    const sec = match[6] ? parseInt(match[6], 10) : 0;
+    if (year >= 2000 && year <= 2035 && month >= 0 && month <= 11 && day >= 1 && day <= 31) {
+      return new Date(year, month, day, hour, min, sec).getTime();
+    }
+  }
+  return Date.now() - 86400000 * 2;
+}
+
 /**
  * Extract media from the permanent folder bundled with the application
  */
@@ -19,19 +36,20 @@ export function getPermanentFolderMedia(): MediaItem[] {
   const items: MediaItem[] = [];
 
   for (const [filePath, url] of Object.entries(bundledMediaModules)) {
-    // filePath is e.g. "/src/photos/sample_timelapse.mp4"
     const fileName = filePath.split('/').pop() || 'media';
     const ext = fileName.split('.').pop()?.toLowerCase() || '';
     const mediaType = detectMediaType(fileName);
+    const safeId = 'folder_' + filePath.replace(/[^a-zA-Z0-9_-]/g, '_');
+    const lastModified = extractDateFromFileName(fileName);
 
     items.push({
-      id: `folder_${fileName}`,
+      id: safeId,
       name: fileName,
       relativePath: fileName,
       mediaType,
       extension: ext,
       size: mediaType === 'video' ? 1024 * 1024 * 4.2 : 1024 * 1024 * 1.5,
-      lastModified: Date.now() - 86400000 * 2,
+      lastModified,
       url,
     });
   }

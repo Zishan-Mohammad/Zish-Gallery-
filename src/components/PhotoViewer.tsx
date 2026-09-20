@@ -47,8 +47,23 @@ export const PhotoViewer: React.FC<PhotoViewerProps> = ({
 
   // Swipe detection refs
   const touchStartX = useRef<number | null>(null);
+  const touchStartY = useRef<number | null>(null);
   const touchEndX = useRef<number | null>(null);
-  const minSwipeDistance = 50;
+  const touchEndY = useRef<number | null>(null);
+  const lastTapTime = useRef<number>(0);
+  const activeThumbnailRef = useRef<HTMLButtonElement | null>(null);
+  const minSwipeDistance = 45;
+
+  // Auto-scroll active thumbnail into view
+  useEffect(() => {
+    if (activeThumbnailRef.current) {
+      activeThumbnailRef.current.scrollIntoView({
+        behavior: 'smooth',
+        block: 'nearest',
+        inline: 'center',
+      });
+    }
+  }, [currentIndex]);
 
   // Prevent background scrolling while modal is open
   useEffect(() => {
@@ -80,7 +95,6 @@ export const PhotoViewer: React.FC<PhotoViewerProps> = ({
   // Keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Don't intercept if user is typing in an input
       if ((e.target as HTMLElement)?.tagName === 'INPUT') return;
 
       if (e.key === 'Escape') {
@@ -100,24 +114,47 @@ export const PhotoViewer: React.FC<PhotoViewerProps> = ({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [handlePrev, handleNext, onClose, onToggleFavorite, item]);
 
-  // Touch swipe handling
+  // Touch gesture handling (Swipe Left/Right to Navigate, Swipe Down to Close)
   const onTouchStart = (e: React.TouchEvent) => {
     touchEndX.current = null;
+    touchEndY.current = null;
     touchStartX.current = e.targetTouches[0].clientX;
+    touchStartY.current = e.targetTouches[0].clientY;
   };
 
   const onTouchMove = (e: React.TouchEvent) => {
     touchEndX.current = e.targetTouches[0].clientX;
+    touchEndY.current = e.targetTouches[0].clientY;
   };
 
   const onTouchEnd = () => {
-    if (!touchStartX.current || !touchEndX.current) return;
-    const distance = touchStartX.current - touchEndX.current;
-    if (distance > minSwipeDistance) {
-      handleNext();
-    } else if (distance < -minSwipeDistance) {
-      handlePrev();
+    if (touchStartX.current === null || touchEndX.current === null) return;
+    const deltaX = touchStartX.current - touchEndX.current;
+    const deltaY = (touchStartY.current ?? 0) - (touchEndY.current ?? 0);
+
+    // If swipe down is significant and mostly vertical -> close viewer (mobile gesture)
+    if (deltaY < -65 && Math.abs(deltaX) < 55) {
+      onClose();
+      return;
     }
+
+    // If horizontal swipe is significant and mostly horizontal -> next/prev
+    if (Math.abs(deltaX) > minSwipeDistance && Math.abs(deltaX) > Math.abs(deltaY) * 1.2) {
+      if (deltaX > 0) {
+        handleNext();
+      } else {
+        handlePrev();
+      }
+    }
+  };
+
+  // Double tap to zoom handler for mobile photos
+  const handlePhotoTap = () => {
+    const now = Date.now();
+    if (now - lastTapTime.current < 300) {
+      setIsZoomed((prev) => !prev);
+    }
+    lastTapTime.current = now;
   };
 
   const handleImageLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
@@ -151,32 +188,32 @@ export const PhotoViewer: React.FC<PhotoViewerProps> = ({
       onTouchEnd={onTouchEnd}
     >
       {/* Top Controls Bar */}
-      <div className="absolute top-0 inset-x-0 z-30 flex items-center justify-between p-4 sm:p-6 bg-gradient-to-b from-black/80 via-black/40 to-transparent">
+      <div className="absolute top-0 inset-x-0 z-30 flex items-center justify-between p-2.5 sm:p-6 pt-[max(0.75rem,env(safe-area-inset-top))] bg-gradient-to-b from-black/90 via-black/50 to-transparent">
         {/* Left: Counter & Filename */}
-        <div className="flex items-center gap-3">
-          <span className="px-3 py-1 rounded-full bg-neutral-900/90 border border-neutral-700 text-xs font-semibold text-neutral-300">
+        <div className="flex items-center gap-2 sm:gap-3 shrink min-w-0">
+          <span className="px-2.5 sm:px-3 py-1 rounded-full bg-neutral-900/90 border border-neutral-700 text-xs font-semibold text-neutral-300 shrink-0">
             {currentIndex + 1} / {photos.length}
           </span>
-          <span className="hidden sm:inline-block text-sm font-medium text-white max-w-xs truncate" title={item.name}>
+          <span className="text-xs sm:text-sm font-medium text-white truncate max-w-[120px] sm:max-w-xs md:max-w-md" title={item.name}>
             {item.name}
           </span>
           {isVideo && (
-            <span className="flex items-center gap-1 px-2 py-0.5 rounded bg-amber-500/20 border border-amber-500/40 text-amber-300 text-[10px] font-bold uppercase">
+            <span className="flex items-center gap-1 px-2 py-0.5 rounded bg-amber-500/20 border border-amber-500/40 text-amber-300 text-[10px] font-bold uppercase shrink-0">
               <Video className="w-3 h-3" />
-              <span>Video</span>
+              <span className="hidden xs:inline">Video</span>
             </span>
           )}
         </div>
 
         {/* Right: Actions */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1 sm:gap-2 shrink-0">
           {/* Zoom Toggle (only for photos) */}
           {!isVideo && (
             <button
               type="button"
               id="btn-lightbox-zoom"
               onClick={() => setIsZoomed(!isZoomed)}
-              className="p-2.5 rounded-xl bg-neutral-900/80 hover:bg-neutral-800 text-neutral-300 hover:text-white border border-neutral-800 transition-colors"
+              className="p-2 sm:p-2.5 rounded-xl bg-neutral-900/80 hover:bg-neutral-800 text-neutral-300 hover:text-white border border-neutral-800 transition-colors min-h-[38px] min-w-[38px] flex items-center justify-center active:scale-95"
               title={isZoomed ? 'Fit to Screen' : 'Zoom In'}
             >
               {isZoomed ? <ZoomOut className="w-4 h-4" /> : <ZoomIn className="w-4 h-4" />}
@@ -188,7 +225,7 @@ export const PhotoViewer: React.FC<PhotoViewerProps> = ({
             type="button"
             id="btn-lightbox-info"
             onClick={() => setShowInfo(!showInfo)}
-            className={`p-2.5 rounded-xl border transition-colors ${
+            className={`p-2 sm:p-2.5 rounded-xl border transition-colors min-h-[38px] min-w-[38px] flex items-center justify-center active:scale-95 ${
               showInfo
                 ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
                 : 'bg-neutral-900/80 hover:bg-neutral-800 text-neutral-300 hover:text-white border-neutral-800'
@@ -203,7 +240,7 @@ export const PhotoViewer: React.FC<PhotoViewerProps> = ({
             type="button"
             id="btn-lightbox-favorite"
             onClick={() => onToggleFavorite(item.id)}
-            className={`p-2.5 rounded-xl border transition-colors ${
+            className={`p-2 sm:p-2.5 rounded-xl border transition-colors min-h-[38px] min-w-[38px] flex items-center justify-center active:scale-95 ${
               isFavorite
                 ? 'bg-rose-500/20 text-rose-400 border-rose-500/40'
                 : 'bg-neutral-900/80 hover:bg-neutral-800 text-neutral-300 hover:text-rose-400 border-neutral-800'
@@ -218,7 +255,7 @@ export const PhotoViewer: React.FC<PhotoViewerProps> = ({
             id="btn-lightbox-download"
             href={item.url}
             download={item.name}
-            className="p-2.5 rounded-xl bg-neutral-900/80 hover:bg-neutral-800 text-neutral-300 hover:text-white border border-neutral-800 transition-colors"
+            className="p-2 sm:p-2.5 rounded-xl bg-neutral-900/80 hover:bg-neutral-800 text-neutral-300 hover:text-white border border-neutral-800 transition-colors min-h-[38px] min-w-[38px] flex items-center justify-center active:scale-95"
             title="Download / Save copy"
           >
             <Download className="w-4 h-4" />
@@ -235,7 +272,7 @@ export const PhotoViewer: React.FC<PhotoViewerProps> = ({
                   onClose();
                 }
               }}
-              className="p-2.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/25 text-rose-400 hover:text-rose-300 border border-rose-500/30 transition-colors"
+              className="p-2 sm:p-2.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/25 text-rose-400 hover:text-rose-300 border border-rose-500/30 transition-colors min-h-[38px] min-w-[38px] flex items-center justify-center active:scale-95"
               title="Delete from Vault"
             >
               <Trash2 className="w-4 h-4" />
@@ -247,7 +284,7 @@ export const PhotoViewer: React.FC<PhotoViewerProps> = ({
             type="button"
             id="btn-lightbox-close"
             onClick={onClose}
-            className="p-2.5 rounded-xl bg-neutral-900/90 hover:bg-rose-950 hover:text-rose-300 text-neutral-300 border border-neutral-800 transition-colors ml-2"
+            className="p-2 sm:p-2.5 rounded-xl bg-neutral-900/90 hover:bg-rose-950 hover:text-rose-300 text-neutral-300 border border-neutral-800 transition-colors ml-1 min-h-[38px] min-w-[38px] flex items-center justify-center active:scale-95"
             title="Close Viewer (Esc)"
           >
             <X className="w-5 h-5" />
@@ -257,7 +294,7 @@ export const PhotoViewer: React.FC<PhotoViewerProps> = ({
 
       {/* Main Media Stage */}
       <div
-        className="relative w-full h-full flex items-center justify-center p-4 sm:p-12 overflow-auto"
+        className="relative w-full h-full flex items-center justify-center p-2 sm:p-8 pt-16 pb-20 sm:pb-24 overflow-hidden"
         onClick={(e) => {
           if (e.target === e.currentTarget) {
             onClose();
@@ -272,7 +309,7 @@ export const PhotoViewer: React.FC<PhotoViewerProps> = ({
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.98 }}
               transition={{ duration: 0.2 }}
-              className="max-h-[86vh] max-w-[90vw] flex items-center justify-center"
+              className="max-h-[75vh] sm:max-h-[82vh] max-w-[95vw] sm:max-w-[90vw] flex items-center justify-center"
             >
               <video
                 ref={videoRef}
@@ -281,7 +318,7 @@ export const PhotoViewer: React.FC<PhotoViewerProps> = ({
                 autoPlay
                 playsInline
                 onLoadedMetadata={handleVideoMetadata}
-                className="max-h-[84vh] max-w-[88vw] rounded-2xl shadow-2xl border border-neutral-800 bg-black outline-none"
+                className="max-h-[74vh] sm:max-h-[80vh] max-w-[94vw] sm:max-w-[88vw] rounded-2xl shadow-2xl border border-neutral-800 bg-black outline-none"
               />
             </motion.div>
           ) : (
@@ -290,16 +327,16 @@ export const PhotoViewer: React.FC<PhotoViewerProps> = ({
               src={item.url}
               alt={item.name}
               onLoad={handleImageLoad}
+              onClick={handlePhotoTap}
               initial={{ opacity: 0, scale: 0.96 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.98 }}
               transition={{ duration: 0.2 }}
               className={`transition-all duration-300 select-none shadow-2xl rounded-lg ${
                 isZoomed
-                  ? 'max-w-none cursor-zoom-out'
-                  : 'max-h-[86vh] max-w-[90vw] object-contain cursor-zoom-in'
+                  ? 'max-w-none max-h-none cursor-zoom-out'
+                  : 'max-h-[74vh] sm:max-h-[82vh] max-w-[95vw] sm:max-w-[90vw] object-contain cursor-zoom-in'
               }`}
-              onClick={() => setIsZoomed(!isZoomed)}
             />
           )}
         </AnimatePresence>
@@ -312,9 +349,9 @@ export const PhotoViewer: React.FC<PhotoViewerProps> = ({
           id="btn-lightbox-prev"
           onClick={handlePrev}
           aria-label="Previous media"
-          className="absolute left-4 top-1/2 -translate-y-1/2 z-30 p-3 rounded-2xl bg-neutral-900/80 hover:bg-neutral-800 text-neutral-200 hover:text-white border border-neutral-800 shadow-xl transition-all active:scale-95"
+          className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-30 p-2.5 sm:p-3 rounded-full sm:rounded-2xl bg-black/60 sm:bg-neutral-900/80 hover:bg-neutral-800 text-neutral-200 hover:text-white border border-neutral-800/80 shadow-xl transition-all active:scale-90"
         >
-          <ChevronLeft className="w-6 h-6" />
+          <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" />
         </button>
       )}
 
@@ -325,11 +362,50 @@ export const PhotoViewer: React.FC<PhotoViewerProps> = ({
           id="btn-lightbox-next"
           onClick={handleNext}
           aria-label="Next media"
-          className="absolute right-4 top-1/2 -translate-y-1/2 z-30 p-3 rounded-2xl bg-neutral-900/80 hover:bg-neutral-800 text-neutral-200 hover:text-white border border-neutral-800 shadow-xl transition-all active:scale-95"
+          className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-30 p-2.5 sm:p-3 rounded-full sm:rounded-2xl bg-black/60 sm:bg-neutral-900/80 hover:bg-neutral-800 text-neutral-200 hover:text-white border border-neutral-800/80 shadow-xl transition-all active:scale-90"
         >
-          <ChevronRight className="w-6 h-6" />
+          <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" />
         </button>
       )}
+
+      {/* Bottom Thumbnail Strip (Smooth mobile filmstrip) */}
+      <div className="absolute bottom-0 inset-x-0 z-30 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 bg-gradient-to-t from-black via-black/80 to-transparent">
+        <div className="flex items-center gap-1.5 overflow-x-auto px-4 py-1.5 no-scrollbar max-w-2xl mx-auto touch-pan-x justify-start sm:justify-center">
+          {photos.map((thumb, idx) => {
+            const isActive = idx === currentIndex;
+            return (
+              <button
+                key={thumb.id}
+                ref={isActive ? activeThumbnailRef : null}
+                type="button"
+                onClick={() => {
+                  onNavigate(idx);
+                  setIsZoomed(false);
+                }}
+                className={`relative shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-lg overflow-hidden border transition-all duration-200 active:scale-95 ${
+                  isActive
+                    ? 'border-amber-400 ring-2 ring-amber-400/40 scale-105 opacity-100 z-10'
+                    : 'border-neutral-800 opacity-40 hover:opacity-80'
+                }`}
+                aria-label={`Jump to item ${idx + 1}`}
+              >
+                {thumb.mediaType === 'video' ? (
+                  <div className="w-full h-full bg-neutral-900 flex items-center justify-center">
+                    <Video className="w-3.5 h-3.5 text-amber-400" />
+                  </div>
+                ) : (
+                  <img
+                    src={thumb.url}
+                    alt={thumb.name}
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                  />
+                )}
+              </button>
+            );
+          })}
+        </div>
+      </div>
 
       {/* Details / Metadata Drawer */}
       <AnimatePresence>
@@ -338,13 +414,14 @@ export const PhotoViewer: React.FC<PhotoViewerProps> = ({
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 50 }}
-            className="absolute bottom-4 left-4 right-4 sm:left-auto sm:right-6 sm:bottom-6 z-30 sm:w-80 rounded-2xl bg-neutral-900/95 border border-neutral-800 p-4 shadow-2xl backdrop-blur-xl text-neutral-200 text-xs"
+            className="absolute bottom-20 left-4 right-4 sm:left-auto sm:right-6 sm:bottom-24 z-40 sm:w-80 rounded-2xl bg-neutral-900/95 border border-neutral-800 p-4 shadow-2xl backdrop-blur-xl text-neutral-200 text-xs"
           >
             <div className="flex items-center justify-between pb-2 mb-2 border-b border-neutral-800">
               <span className="font-semibold text-white">Media Details</span>
               <button
                 onClick={() => setShowInfo(false)}
-                className="text-neutral-400 hover:text-white"
+                className="text-neutral-400 hover:text-white p-1"
+                aria-label="Close details"
               >
                 <X className="w-4 h-4" />
               </button>

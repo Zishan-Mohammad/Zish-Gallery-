@@ -50,41 +50,41 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onUnlock }) => {
   };
 
   return (
-    <div className="relative min-h-screen w-full flex items-center justify-center p-4 bg-gradient-to-b from-neutral-950 via-neutral-900 to-black text-neutral-100 overflow-hidden">
+    <div className="relative min-h-[100dvh] w-full flex items-center justify-center p-4 sm:p-6 bg-gradient-to-b from-neutral-950 via-neutral-900 to-black text-neutral-100 overflow-y-auto">
       {/* Background radial ambient lights */}
-      <div className="absolute top-1/4 -left-32 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-1/4 -right-32 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute top-1/4 -left-32 w-72 sm:w-96 h-72 sm:h-96 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-1/4 -right-32 w-72 sm:w-96 h-72 sm:h-96 bg-blue-500/5 rounded-full blur-3xl pointer-events-none" />
 
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
-        className="w-full max-w-md"
+        className="w-full max-w-md my-auto"
       >
-        <div className="rounded-3xl bg-neutral-900/90 border border-neutral-800/80 p-8 shadow-2xl backdrop-blur-xl">
+        <div className="rounded-3xl bg-neutral-900/90 border border-neutral-800/80 p-6 sm:p-8 shadow-2xl backdrop-blur-xl">
           {/* Header Vault Icon */}
           <div className="flex flex-col items-center text-center">
-            <div className="relative mb-5 flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-tr from-amber-600/20 to-amber-400/10 border border-amber-500/30 text-amber-400 shadow-inner">
-              <Lock className="h-9 w-9 stroke-[1.75]" />
-              <span className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-neutral-950 border border-neutral-700 text-amber-400">
-                <KeyRound className="h-3 w-3" />
+            <div className="relative mb-4 sm:mb-5 flex h-16 w-16 sm:h-20 sm:w-20 items-center justify-center rounded-2xl bg-gradient-to-tr from-amber-600/20 to-amber-400/10 border border-amber-500/30 text-amber-400 shadow-inner">
+              <Lock className="h-8 w-8 sm:h-9 sm:w-9 stroke-[1.75]" />
+              <span className="absolute -bottom-1 -right-1 flex h-5 w-5 sm:h-6 sm:w-6 items-center justify-center rounded-full bg-neutral-950 border border-neutral-700 text-amber-400">
+                <KeyRound className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
               </span>
             </div>
 
-            <span className="inline-block text-[11px] font-semibold tracking-widest uppercase text-amber-400/90 bg-amber-400/10 px-3 py-1 rounded-full border border-amber-400/20">
+            <span className="inline-block text-[10px] sm:text-[11px] font-semibold tracking-widest uppercase text-amber-400/90 bg-amber-400/10 px-2.5 sm:px-3 py-1 rounded-full border border-amber-400/20">
               Private Gallery
             </span>
 
-            <h1 className="mt-3 text-2xl font-bold tracking-tight text-white">
+            <h1 className="mt-2.5 sm:mt-3 text-xl sm:text-2xl font-bold tracking-tight text-white">
               Zish-Gallery
             </h1>
-            <p className="mt-1 text-sm text-neutral-400">
-              Your personal photo gallery
+            <p className="mt-1 text-xs sm:text-sm text-neutral-400">
+              Your personal photo & video gallery
             </p>
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="mt-8 space-y-4">
+          <form onSubmit={handleSubmit} className="mt-6 sm:mt-8 space-y-4">
             <div>
               <div className="relative">
                 <input
@@ -98,14 +98,14 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onUnlock }) => {
                   placeholder="Enter Password"
                   autoFocus
                   autoComplete="current-password"
-                  className="w-full rounded-xl bg-neutral-950/80 border border-neutral-700 px-4 py-3.5 pr-12 text-sm text-white placeholder-neutral-500 transition-all focus:border-amber-500/80 focus:outline-none focus:ring-2 focus:ring-amber-500/20"
+                  className="w-full rounded-xl bg-neutral-950/80 border border-neutral-700 px-4 py-3 sm:py-3.5 pr-12 text-sm text-white placeholder-neutral-500 transition-all focus:border-amber-500/80 focus:outline-none focus:ring-2 focus:ring-amber-500/20 min-h-[46px]"
                 />
                 <button
                   type="button"
                   id="btn-toggle-password"
                   onClick={() => setShowPassword(!showPassword)}
                   aria-label={showPassword ? 'Hide password' : 'Show password'}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-200 transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-200 transition-colors p-1.5"
                 >
                   {showPassword ? (
                     <EyeOff className="h-4 w-4" />
@@ -134,7 +134,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onUnlock }) => {
               type="submit"
               id="btn-unlock-gallery"
               disabled={isLoading}
-              className="w-full rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 px-4 py-3 text-sm font-semibold text-neutral-950 shadow-lg shadow-amber-500/10 hover:from-amber-400 hover:to-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-400/50 active:scale-[0.99] transition-all disabled:opacity-60 cursor-pointer"
+              className="w-full rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 px-4 py-3 sm:py-3.5 text-sm font-semibold text-neutral-950 shadow-lg shadow-amber-500/10 hover:from-amber-400 hover:to-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-400/50 active:scale-[0.99] transition-all disabled:opacity-60 cursor-pointer min-h-[46px]"
             >
               {isLoading ? 'Verifying...' : 'Unlock Gallery'}
             </button>
@@ -144,16 +144,24 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onUnlock }) => {
           {!isCustomized && (
             <div className="mt-4 rounded-xl bg-neutral-950/60 border border-neutral-800/80 p-3 text-center">
               <p className="text-xs text-neutral-400">
-                Initial passcode: <span className="font-mono text-amber-300 font-semibold">{DEFAULT_PASSWORD}</span>
+                Initial passcode:{' '}
+                <button
+                  type="button"
+                  onClick={() => setPassword(DEFAULT_PASSWORD)}
+                  className="font-mono text-amber-300 font-semibold underline underline-offset-2 hover:text-amber-200 transition-colors cursor-pointer"
+                  title="Click to auto-fill passcode"
+                >
+                  {DEFAULT_PASSWORD}
+                </button>
               </p>
-              <p className="text-[11px] text-neutral-500 mt-0.5">
-                (You can easily customize or change this anytime in Settings)
+              <p className="text-[10px] sm:text-[11px] text-neutral-500 mt-0.5">
+                (Tap passcode to auto-fill or customize in Settings)
               </p>
             </div>
           )}
 
           {/* Privacy & Architecture Disclaimer Footer */}
-          <div className="mt-6 pt-4 border-t border-neutral-800/60 flex items-center justify-between text-[11px] text-neutral-400">
+          <div className="mt-5 sm:mt-6 pt-4 border-t border-neutral-800/60 flex items-center justify-between text-[11px] text-neutral-400">
             <span className="flex items-center gap-1.5">
               <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
               <span>100% Client-Side Private</span>
@@ -163,7 +171,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onUnlock }) => {
               id="btn-security-info"
               type="button"
               onClick={() => setShowDisclaimer(true)}
-              className="text-neutral-400 hover:text-amber-300 flex items-center gap-1 transition-colors cursor-pointer"
+              className="text-neutral-400 hover:text-amber-300 flex items-center gap-1 transition-colors cursor-pointer p-1"
             >
               <Info className="w-3.5 h-3.5" />
               <span>Security Info</span>

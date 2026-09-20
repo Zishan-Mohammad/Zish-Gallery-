@@ -91,25 +91,26 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-md p-4 overflow-y-auto">
-      <div className="w-full max-w-xl rounded-3xl bg-neutral-900 border border-neutral-800 shadow-2xl text-neutral-100 max-h-[92vh] flex flex-col overflow-hidden my-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-3 sm:p-4 overflow-y-auto">
+      <div className="w-full max-w-xl rounded-3xl bg-neutral-900 border border-neutral-800 shadow-2xl text-neutral-100 max-h-[90dvh] flex flex-col overflow-hidden my-auto">
         {/* Header */}
-        <div className="flex items-center justify-between p-5 sm:p-6 border-b border-neutral-800">
+        <div className="flex items-center justify-between p-4 sm:p-6 border-b border-neutral-800">
           <div className="flex items-center gap-2">
             <LayoutGrid className="w-5 h-5 text-amber-400" />
-            <h2 className="text-lg font-bold">Gallery Settings</h2>
+            <h2 className="text-base sm:text-lg font-bold">Gallery Settings</h2>
           </div>
           <button
             id="btn-close-settings"
             onClick={onClose}
             className="p-1.5 rounded-lg text-neutral-400 hover:text-white hover:bg-neutral-800 transition"
+            aria-label="Close settings"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Settings Body */}
-        <div className="p-5 sm:p-6 overflow-y-auto space-y-6 text-sm">
+        <div className="p-4 sm:p-6 overflow-y-auto space-y-5 sm:space-y-6 text-sm">
           {/* Theme & Display Mode */}
           <div>
             <label className="text-xs font-semibold text-neutral-400 uppercase tracking-wider block mb-2.5">
