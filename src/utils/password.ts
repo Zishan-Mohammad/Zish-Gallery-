@@ -3,7 +3,7 @@
 const STORAGE_KEY_HASH = 'zish_gallery_pwd_hash';
 const STORAGE_KEY_SALT = 'zish_gallery_pwd_salt';
 const STORAGE_KEY_CUSTOMIZED = 'zish_gallery_pwd_customized';
-export const DEFAULT_PASSWORD = 'zish2026';
+export const DEFAULT_PASSWORD = 'Hajmola';
 
 /**
  * Generate a cryptographically secure random salt hex string
