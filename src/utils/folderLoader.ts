@@ -4,11 +4,18 @@ import {
   saveMediaToVault,
   deleteMediaFromVault,
   detectMediaType,
+  getDeletedMediaIds,
+  markMediaDeleted,
+  restoreAllDeletedMedia,
+  getDeletedCount,
 } from './vaultStorage';
 
-// Automatically glob all photos and videos inside the permanent src/photos folder
+// Automatically glob all photos and videos inside the permanent src/photos folder and its subfolders
 const bundledMediaModules = import.meta.glob<string>(
-  '/src/photos/**/*.{jpg,jpeg,png,webp,gif,avif,svg,mp4,webm,mov,ogg,m4v,mkv,JPG,JPEG,PNG,WEBP,GIF,AVIF,SVG,MP4,WEBM,MOV,OGG,M4V,MKV}',
+  [
+    '/src/photos/*.{jpg,jpeg,png,webp,gif,avif,svg,mp4,webm,mov,ogg,m4v,mkv,JPG,JPEG,PNG,WEBP,GIF,AVIF,SVG,MP4,WEBM,MOV,OGG,M4V,MKV}',
+    '/src/photos/**/*.{jpg,jpeg,png,webp,gif,avif,svg,mp4,webm,mov,ogg,m4v,mkv,JPG,JPEG,PNG,WEBP,GIF,AVIF,SVG,MP4,WEBM,MOV,OGG,M4V,MKV}',
+  ],
   { eager: true, query: '?url', import: 'default' }
 );
 
@@ -48,7 +55,7 @@ export function getPermanentFolderMedia(): MediaItem[] {
       relativePath: fileName,
       mediaType,
       extension: ext,
-      size: mediaType === 'video' ? 1024 * 1024 * 4.2 : 1024 * 1024 * 1.5,
+      size: mediaType === 'video' ? 1024 * 1024 * 3.5 : 1024 * 1024 * 1.2,
       lastModified,
       url,
     });
@@ -61,12 +68,13 @@ export const getPermanentFolderPhotos = getPermanentFolderMedia;
 
 /**
  * Load all permanently accessible media:
- * 1. Media from the permanent `photos/` folder
- * 2. Media saved permanently in the browser's IndexedDB vault
+ * 1. Media from the permanent `photos/` folder (minus deleted items)
+ * 2. Media saved permanently in the browser's IndexedDB vault (minus deleted items)
  */
 export async function loadAllPermanentMedia(): Promise<MediaItem[]> {
-  const folderMedia = getPermanentFolderMedia();
-  const vaultMedia = await loadPermanentVaultMedia();
+  const deletedIds = getDeletedMediaIds();
+  const folderMedia = getPermanentFolderMedia().filter((m) => !deletedIds.has(m.id));
+  const vaultMedia = (await loadPermanentVaultMedia()).filter((m) => !deletedIds.has(m.id));
 
   // Combine and deduplicate by id
   const map = new Map<string, MediaItem>();
@@ -88,12 +96,23 @@ export async function addMediaToSecureVault(files: File[]): Promise<MediaItem[]>
 export const addPhotosToSecureVault = addMediaToSecureVault;
 
 /**
- * Delete media item from vault if it's user-stored
+ * Delete media item from vault and persist the deletion permanently
  */
 export async function removeMedia(id: string): Promise<void> {
+  markMediaDeleted(id);
   if (id.startsWith('vault_')) {
     await deleteMediaFromVault(id);
   }
 }
 
 export const removePhoto = removeMedia;
+
+/**
+ * Restore all deleted items
+ */
+export function restoreDeletedMedia(): void {
+  restoreAllDeletedMedia();
+}
+
+export { getDeletedCount };
+

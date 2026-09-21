@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Heart, Maximize2, Video, Play, Image as ImageIcon } from 'lucide-react';
 import { motion } from 'motion/react';
 import { MediaItem, GridDensity } from '../types';
@@ -71,7 +71,15 @@ const MediaCard: React.FC<MediaCardProps> = ({
   const [isLoaded, setIsLoaded] = useState(false);
   const [hasError, setHasError] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const imgRef = useRef<HTMLImageElement>(null);
   const isVideo = item.mediaType === 'video';
+
+  // If the browser already has the image cached, mark loaded immediately to eliminate skeleton flash
+  useEffect(() => {
+    if (!isVideo && imgRef.current?.complete && imgRef.current.naturalWidth > 0) {
+      setIsLoaded(true);
+    }
+  }, [item.url, isVideo]);
 
   const handleMouseEnter = () => {
     if (isVideo && videoRef.current) {
@@ -90,22 +98,22 @@ const MediaCard: React.FC<MediaCardProps> = ({
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 12 }}
+      initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.25, delay: Math.min(index * 0.015, 0.25) }}
+      transition={{ duration: 0.2, delay: Math.min(index * 0.01, 0.2) }}
       onClick={onClick}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
-      className={`group relative cursor-pointer overflow-hidden rounded-xl sm:rounded-2xl bg-neutral-900 border border-neutral-800/80 shadow-sm hover:border-amber-500/50 hover:shadow-xl transition-all duration-300 transform active:scale-[0.98] sm:hover:-translate-y-1 ${
+      className={`group relative cursor-pointer overflow-hidden rounded-xl sm:rounded-2xl bg-neutral-900 border border-neutral-800/80 shadow-sm hover:border-amber-500/50 hover:shadow-xl transition-all duration-200 transform active:scale-[0.98] sm:hover:-translate-y-0.5 ${
         density === 'large' ? 'max-w-2xl mx-auto w-full' : ''
       }`}
     >
       {/* Aspect Ratio Container */}
-      <div className={`relative ${density === 'large' ? 'aspect-[4/3] sm:aspect-video' : 'aspect-square'} w-full overflow-hidden bg-neutral-950/60 flex items-center justify-center`}>
+      <div className={`relative ${density === 'large' ? 'aspect-[4/3] sm:aspect-video' : 'aspect-square'} w-full overflow-hidden bg-neutral-950/70 flex items-center justify-center`}>
         {/* Skeleton Placeholder while loading */}
         {!isLoaded && !hasError && (
-          <div className="absolute inset-0 flex items-center justify-center bg-neutral-900 animate-pulse">
-            <div className="h-5 w-5 sm:h-6 sm:w-6 rounded-full border-2 border-neutral-700 border-t-amber-500 animate-spin" />
+          <div className="absolute inset-0 flex items-center justify-center bg-neutral-900/80">
+            <div className="h-4 w-4 sm:h-5 sm:w-5 rounded-full border-2 border-neutral-700 border-t-amber-500 animate-spin" />
           </div>
         )}
 
@@ -137,7 +145,7 @@ const MediaCard: React.FC<MediaCardProps> = ({
                 setHasError(true);
                 setIsLoaded(true);
               }}
-              className={`h-full w-full object-cover transition-transform duration-500 group-hover:scale-105 ${
+              className={`h-full w-full object-cover transition-transform duration-300 group-hover:scale-105 ${
                 isLoaded ? 'opacity-100' : 'opacity-0'
               }`}
             />
@@ -151,6 +159,7 @@ const MediaCard: React.FC<MediaCardProps> = ({
         ) : (
           /* Photo Image */
           <img
+            ref={imgRef}
             src={item.url}
             alt={item.name}
             loading="lazy"
@@ -161,7 +170,7 @@ const MediaCard: React.FC<MediaCardProps> = ({
               setHasError(true);
               setIsLoaded(true);
             }}
-            className={`h-full w-full object-cover transition-transform duration-500 group-hover:scale-105 ${
+            className={`h-full w-full object-cover transition-transform duration-300 group-hover:scale-105 ${
               isLoaded ? 'opacity-100' : 'opacity-0'
             }`}
           />

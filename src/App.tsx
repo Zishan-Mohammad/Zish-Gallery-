@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback } from 'react';
 import { GallerySettings, MediaItem } from './types';
 import { LoginScreen } from './components/LoginScreen';
 import { Gallery } from './components/Gallery';
-import { revokeAllObjectUrls } from './utils/imageUtils';
 import {
   loadAllPermanentMedia,
   addMediaToSecureVault,
@@ -49,12 +48,20 @@ export default function App() {
     }
   }, []);
 
-  // Fetch media from the permanent folder and permanent vault
+  // Fetch media from the permanent folder and permanent vault with memoized diff
   const refreshPhotos = useCallback(async () => {
     setIsLoadingPhotos(true);
     try {
       const loaded = await loadAllPermanentMedia();
-      setPhotos(loaded);
+      setPhotos((prev) => {
+        if (
+          prev.length === loaded.length &&
+          prev.every((item, idx) => item.id === loaded[idx]?.id && item.url === loaded[idx]?.url)
+        ) {
+          return prev;
+        }
+        return loaded;
+      });
     } catch (err) {
       console.warn('Error loading permanent media:', err);
     } finally {
@@ -62,12 +69,10 @@ export default function App() {
     }
   }, []);
 
-  // Load photos immediately upon unlocking
+  // Pre-load photos immediately on mount so unlocking is instantaneous
   useEffect(() => {
-    if (isAuthenticated) {
-      refreshPhotos();
-    }
-  }, [isAuthenticated, refreshPhotos]);
+    refreshPhotos();
+  }, [refreshPhotos]);
 
   // Sync settings changes to localStorage
   const handleUpdateSettings = (newSettings: Partial<GallerySettings>) => {
@@ -84,15 +89,14 @@ export default function App() {
     setPhotos((prev) => [...prev, ...newItems]);
   };
 
-  // Remove media from vault
+  // Remove media from vault permanently
   const handleDeletePhoto = async (photoId: string) => {
     await removeMedia(photoId);
     setPhotos((prev) => prev.filter((p) => p.id !== photoId));
   };
 
-  // Clean up object URLs when logging out or locking
+  // Lock vault session
   const handleLogout = () => {
-    revokeAllObjectUrls();
     sessionStorage.removeItem('zish_gallery_authenticated');
     sessionStorage.removeItem('zish_gallery_auth_time');
     setIsAuthenticated(false);

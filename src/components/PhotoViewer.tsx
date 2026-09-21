@@ -261,8 +261,8 @@ export const PhotoViewer: React.FC<PhotoViewerProps> = ({
             <Download className="w-4 h-4" />
           </a>
 
-          {/* Delete Photo Button (if user-stored in vault) */}
-          {onDeletePhoto && item.id.startsWith('vault_') && (
+          {/* Delete Media Button (Permanent local deletion) */}
+          {onDeletePhoto && (
             <button
               type="button"
               id="btn-lightbox-delete"

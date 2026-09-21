@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   X,
   Moon,
@@ -12,12 +12,15 @@ import {
   Trash2,
   Clock,
   LayoutGrid,
+  RotateCcw,
+  HardDrive,
 } from 'lucide-react';
 import { GallerySettings, GridDensity, SortOption, ThemeMode } from '../types';
 import { updatePassword, resetPasswordToDefault, DEFAULT_PASSWORD } from '../utils/password';
 import { clearFavorites } from '../utils/favorites';
-import { clearStoredDirectoryHandle } from '../utils/fileSystem';
-import { clearEntireVault } from '../utils/vaultStorage';
+import { clearEntireVault, getVaultStats } from '../utils/vaultStorage';
+import { restoreDeletedMedia, getDeletedCount } from '../utils/folderLoader';
+import { formatBytes } from '../utils/imageUtils';
 import { PWAInstallButton } from './PWAInstallButton';
 
 interface SettingsPanelProps {
@@ -41,6 +44,15 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
   const [confirmPwd, setConfirmPwd] = useState('');
   const [pwdMessage, setPwdMessage] = useState<{ text: string; isError: boolean } | null>(null);
   const [isChangingPwd, setIsChangingPwd] = useState(false);
+
+  // Storage stats & deleted count
+  const [vaultStats, setVaultStats] = useState<{ count: number; totalBytes: number }>({ count: 0, totalBytes: 0 });
+  const [deletedCount, setDeletedCount] = useState<number>(getDeletedCount());
+
+  useEffect(() => {
+    getVaultStats().then(setVaultStats);
+    setDeletedCount(getDeletedCount());
+  }, []);
 
   const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -79,14 +91,19 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
     }
   };
 
+  const handleRestoreDeleted = () => {
+    restoreDeletedMedia();
+    setDeletedCount(0);
+    onRefreshGallery();
+  };
+
   const handleClearAllStorage = async () => {
     if (window.confirm('Clear stored favorites and vault photos? Photos in src/photos/ will NOT be touched.')) {
       clearFavorites();
-      await clearStoredDirectoryHandle();
       await clearEntireVault();
       onClearCache();
       onRefreshGallery();
-      alert('Local vault photos, preferences and favorites cleared.');
+      setVaultStats({ count: 0, totalBytes: 0 });
     }
   };
 
@@ -280,6 +297,40 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
             </form>
           </div>
 
+          {/* Local Storage Stats */}
+          <div className="pt-4 border-t border-neutral-800 space-y-3">
+            <label className="text-xs font-semibold text-neutral-400 uppercase tracking-wider block">
+              Local Vault Storage
+            </label>
+            <div className="p-3.5 rounded-2xl bg-neutral-950/70 border border-neutral-800 flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <HardDrive className="w-4 h-4 text-amber-400" />
+                <div>
+                  <p className="text-xs font-medium text-neutral-200">IndexedDB Vault</p>
+                  <p className="text-[11px] text-neutral-500">
+                    {vaultStats.count} uploaded items • {formatBytes(vaultStats.totalBytes)} stored locally
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {deletedCount > 0 && (
+              <div className="p-3 rounded-2xl bg-neutral-950/70 border border-neutral-800 flex items-center justify-between text-xs">
+                <span className="text-neutral-400">
+                  {deletedCount} item{deletedCount === 1 ? '' : 's'} hidden / removed
+                </span>
+                <button
+                  type="button"
+                  onClick={handleRestoreDeleted}
+                  className="flex items-center gap-1.5 text-amber-400 hover:text-amber-300 py-1 px-2.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 transition text-xs"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  <span>Restore Items</span>
+                </button>
+              </div>
+            )}
+          </div>
+
           {/* Progressive Web App Section */}
           <div className="pt-4 border-t border-neutral-800 space-y-2">
             <label className="text-xs font-semibold text-neutral-400 uppercase tracking-wider block">
@@ -290,14 +341,14 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
 
           {/* Clear Cache / Data */}
           <div className="pt-4 border-t border-neutral-800 flex items-center justify-between text-xs text-neutral-400">
-            <span>Reset Local Preferences & Favorites</span>
+            <span>Reset Local Preferences & Vault</span>
             <button
               type="button"
               onClick={handleClearAllStorage}
               className="flex items-center gap-1.5 text-rose-400 hover:text-rose-300 py-1.5 px-3 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 transition"
             >
               <Trash2 className="w-3.5 h-3.5" />
-              <span>Clear Data</span>
+              <span>Clear Vault Data</span>
             </button>
           </div>
 
@@ -305,7 +356,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
           <div className="p-3.5 rounded-2xl bg-amber-500/5 border border-amber-500/20 text-xs text-neutral-400 flex items-start gap-2.5">
             <ShieldCheck className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
             <div className="text-[11px] leading-relaxed">
-              <span className="font-semibold text-amber-200">Client-Side Architecture:</span> This app uses the Web Crypto API to hash passwords and reads directly from your device via the File System Access API. No images or passwords are ever sent to any remote server.
+              <span className="font-semibold text-amber-200">100% Offline & Local Storage:</span> Runs entirely inside your browser using IndexedDB. It does not fetch from GitHub or any external servers. All uploaded media and preferences remain safely stored on your device.
             </div>
           </div>
         </div>
